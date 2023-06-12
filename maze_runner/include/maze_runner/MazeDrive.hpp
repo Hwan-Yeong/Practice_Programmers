@@ -1,10 +1,13 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
-#include <sensor_msgs/Int32MultiArray.h>
+#include <std_msgs/Int32MultiArray.h>
 #include <vector>
 #include <xycar_msgs/xycar_motor.h>
 #include <cmath>
+#include <unistd.h>
+#include <cstdio>
 #include <iostream>
+#include <algorithm>
 #include <yaml-cpp/yaml.h>
 
 
@@ -15,7 +18,6 @@ public:
     using Ptr = std::unique_ptr<MazeDrive>;
 
     static constexpr int32_t kXycarSteeringAangleLimit = 50; ///< Xycar Steering Angle Limit
-    static constexpr double kFrameRate = 33.0;               ///< Frame rate
     /**
      * @brief Construct a new maze drive object
      */
@@ -30,13 +32,14 @@ public:
 private:
     void setParams(const YAML::Node& config);
     void lidarCallback(const sensor_msgs::LaserScan& message);
-    void ultraCallback(const sensor_msgs::Int32MultiArray& message);
+    void ultraCallback(const std_msgs::Int32MultiArray::ConstPtr& message_ultra);
 
-    void ultraDrive(float ultraR, float ultraL);
-    void obstacleAvoidance(float theta, float lidarD);
+    float ultraDrive();
+    float obstacleAvoidance();
 
     void speedControl(float steeringAngle);
     void speedControl_straight(float steeringAngle);
+    void drive_back(float steeringAngle);
 
     void drive(float steeringAngle);
 
@@ -44,6 +47,9 @@ private:
     std::array<float,505> getResult_X() {return X;};
     std::array<float,505> getResult_Y() {return Y;};
     std::vector<float> getResult_Ran() {return ran;};
+    std::vector<int> getResult_ultra() {return ultra_msg;};
+    float getResult_theta() {return theta;};
+    float getResult_lidarD() {return lidarD;};
 
 private:
 
@@ -55,10 +61,11 @@ private:
     // ROX variables
     ros::NodeHandle mNodeHandler;
     ros::Publisher mPublisher;
-    ros::Subscriber mSubscriber;
-
+    ros::Subscriber mSubscriberLidar;
+    ros::Subscriber mSubscriberUltra;
     xycar_msgs::xycar_motor mMotorMessage;
     sensor_msgs::LaserScan mLidarMessage;
+    std_msgs::Int32MultiArray mUltraMessage;
     std::string mPublishingTopicName;
     std::string mSubscribedTopicNameLidar;
     std::string mSubscribedTopicNameUltra;
@@ -77,7 +84,12 @@ private:
     std::array<float,505> lidarX;
     std::array<float,505> lidarY;
     std::vector<float> dist;
+    std::vector<int> ultra_msg;
+    std::vector<int> ultra_array;
 
+    float theta;
+    float lidarD;
+    float lidarIncrement;
 };
 
 }

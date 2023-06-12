@@ -7,6 +7,8 @@
 
 namespace Maze{
 
+
+
 MazeDrive::MazeDrive()
 {
     std::string configPath;
@@ -41,23 +43,66 @@ void MazeDrive::setParams(const YAML::Node& config)
 
 void MazeDrive::run()
 {
+
+    float min_can = 0.6;
+    //float min_ran = *min_element(ran.begin(), ran.end(),myfn);
+    int min_idx = 0;  //min_element(ran.begin(),ran.end(),myfn)-ran.begin();
+    int ss = ran.size();
+    for (int i = 0; i < ss; i++)
+    {
+
+    //    std::cout << "ran : " << ran[i] << std::endl;
+
+        if ((ran[i]>0.2))
+        {
+            if (ran[i] < min_can){
+                min_idx = i;
+                min_can = ran[i];
+            }
+        }
+    }
+    //std::cout << "hheheeh" << min_can << std::endl;
+    theta = (min_idx-ss/2) * lidarIncrement;
+    lidarD = min_can * 100;
+    float max_ran = (max_element(ran.begin(),ran.end())-ran.begin() - ss/2) * lidarIncrement;
+    //unit = cm   
+    //std::cout << "ultra: " << ultra_msg[0]<< std::endl;
+
+
     // variables
-    float lidarD = 0.0;
-    float theta = 0.0;
-    float frontSafetyDistance = 30.0;
+    float frontSafetyDistance = 25;
 
     float calculatedAngle = 0.0;
 
     // drive
     if (lidarD > frontSafetyDistance)
     {
-        // output: calculatedAngle
-        ultraDrive(ultraR, ultraL);
+        //calculatedAngle = ultraDrive();
+
+        calculatedAngle = max_ran * 30;
     }
     else
     {
         // output: calculatedAngle
-        obstacleAvoidance(theta, lidarD);
+        calculatedAngle = obstacleAvoidance();
+        if (calculatedAngle < 0)
+        {
+            //turn right go back
+            //ros::Time time_begin = ros::Time::now();
+            drive_back(kXycarSteeringAangleLimit);
+            sleep(1);
+            drive(-kXycarSteeringAangleLimit);
+            sleep(1);
+        }
+        else
+        {
+            drive_back(-kXycarSteeringAangleLimit);
+            sleep(1);
+            drive(kXycarSteeringAangleLimit);
+            sleep(1);
+
+        }
+        //std::cout << "CACLULATED : " << calculatedAngle << std::endl;
     }
    
     float steeringAngle = std::max(static_cast<float>(-kXycarSteeringAangleLimit), std::min(static_cast<float>(calculatedAngle), static_cast<float>(kXycarSteeringAangleLimit)));
@@ -67,21 +112,24 @@ void MazeDrive::run()
 }
 
 
-void MazeDrive::ultraDrive(float ultraR, float ultraL)
+float MazeDrive::ultraDrive()
 {
     // variable
-    float ultraR = 0.0;
-    float ultraL = 0.0;
-    float sideSafetyDistance = 10.0;
+    //ultra_array = getResult_ultra();
+    int32_t ultraR = ultra_msg[5];
+    int32_t ultraL = ultra_msg[7];
+    float sideSafetyDistance = 20.0;
     float calculatedAngle;
 
     if (ultraR > sideSafetyDistance && ultraL > sideSafetyDistance)
     {
         //go straight
-        calculatedAngle = 0;
-        return calculatedAngle;
-    }
+        calculatedAngle = 0.0;
+        std::cout << "go straight" << std::endl;
 
+        return calculatedAngle;
+
+    }
     else
     {
         if (ultraR <= sideSafetyDistance)
@@ -89,25 +137,34 @@ void MazeDrive::ultraDrive(float ultraR, float ultraL)
             // turn left
             // return calculatedAngle
             // (maybe hardcoding...)
+            calculatedAngle = 20;
+            std::cout << "right obs, turn left" << std::endl;
+            return calculatedAngle;
+
+
         }
         if (ultraL <= sideSafetyDistance)
         {
             // turn right
             // return calculatedAngle
             // (maybe hardcoding...)
+            calculatedAngle = -20;
+            std::cout << "left obs, turn right" << std::endl;
+
+            return calculatedAngle;
+
         }
     }
 }
 
 
-void MazeDrive::obstacleAvoidance(float theta, float lidarD)
+float MazeDrive::obstacleAvoidance()
 {
-    // variable
+
     float distanceX = lidarD * cos(theta);
-    float w = 30;       // car width (have to measure)
+    float w = 20;       // car width (have to measure)
     float safetyFactor = 5;
     float calculatedAngle;
-
     if (distanceX >= w/2)
     {
         calculatedAngle = 0;
@@ -117,8 +174,9 @@ void MazeDrive::obstacleAvoidance(float theta, float lidarD)
     {
         float x = (w/2 + safetyFactor) / lidarD;
         calculatedAngle = theta - acos(x);
-        return calculatedAngle;
+        return -calculatedAngle * 10;
     }
+
 }
 
 
@@ -159,36 +217,40 @@ void MazeDrive::drive(float steeringAngle)
     mPublisher.publish(motorMessage);
 }
 
+
+void MazeDrive::drive_back(float steeringAngle)
+{
+    xycar_msgs::xycar_motor motorMessage;
+    motorMessage.angle = std::round(steeringAngle);
+    motorMessage.speed = std::round(-mXycarSpeed);
+
+    mPublisher.publish(motorMessage);
+}
+
 // output => lidarD, theta
 void MazeDrive::lidarCallback(const sensor_msgs::LaserScan& message)
 {
-    float lidarIncrement = message.angle_increment;
-    int32_t lidarRangeLimit = 505;
+    lidarIncrement = message.angle_increment;
+    int32_t lidarRangeLimit = ran.size();
     int32_t lidarXrange = 128;
-    
+    ran = message.ranges;
     // please check the function to get lidar data
-    // i don't know how it works excectly
-    for (int i = 0; i< lidarRangeLimit; i++)
-    {
-        float rad = i * lidarIncrement;
-        float x = ran[i] * cos(rad);
-        float y = -ran[i] * sin(rad);
-        int pos_X_min = lidarXrange;
-        int neg_X_max = -lidarXrange;
+    // i don't know how it works excectl
 
-        lidarD[i] = x;
-        theta[i] = y;
+
         
-    }
 }
 
 
 // output: ultraR, ultraL
-void MazeDrive::ultraCallback(const sensor_msgs::Int32MultiArray& message)
-{
-    
+void MazeDrive::ultraCallback(const std_msgs::Int32MultiArray::ConstPtr& message_ultra)
+{    
     // function to callback ultrasonic messages
-
+    // ultra_msg.push_back(message_ultra.data[0]);
+    //ultra_msg.push_back(message_ultra.data[1]);
+    for (std::vector<int>::const_iterator it = message_ultra -> data.begin(); it != message_ultra -> data.end(); ++it)
+    {
+        ultra_msg.push_back(*it);
+    }
 }
-
 } // namespace Maze

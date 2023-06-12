@@ -1,6 +1,6 @@
 <launch>
     <include file="$(find xycar_motor)/launch/xycar_motor.launch" />
-
+    <!--include file="$(find xycar_ultrasonic)/launch/xycar_ultrasonic_noviewer.launch"/-->
     <node name="xycar_lidar"  pkg="xycar_lidar"  type="xycar_ydlidar" output="screen" respawn="false" >
       <param name="port"         type="string" value="/dev/ttyLIDAR"/>  
       <param name="baudrate"         type="int" value="230400"/>  
@@ -11,12 +11,14 @@
       <param name="angle_min"    type="double" value="-180" />
       <param name="angle_max"    type="double" value="180" />
       <param name="range_min"    type="double" value="0.1" />
-      <param name="range_max"    type="double" value="16.0" />
+      <param name="range_max"    type="double" value="2.0" />
       <param name="ignore_array" type="string" value="" />
       <param name="frequency"    type="double" value="10"/>
       <param name="samp_rate"    type="int"    value="5"/>
-  </node>
-    
+    </node>
+
+    <node pkg="xycar_ultrasonic" type="xycar_ultrasonic.py" name="xycar_ultra" output="screen"/>
+
     <node name="Maze_Runner" pkg="maze_runner" type="maze_runner_node" output="screen"/>
     <param name="config_path" type="str" value="$(find maze_runner)/config/config.yaml"/>
     <!--node name="rosbag" pkg="rosbag" type="play" args="$(find LaneKeepingSystem)/src/track.bag"/-->

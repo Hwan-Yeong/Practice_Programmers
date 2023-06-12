@@ -128,7 +128,7 @@ include
 
 ## Declare a C++ library
 add_library(Modules
-  src/${PROJECT_NAME}/maze_drive.cpp
+  src/${PROJECT_NAME}/MazeDrive.cpp
 
 )
 
@@ -142,7 +142,7 @@ add_library(Modules
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(
    ${PROJECT_NAME}_node src/main.cpp
-#   src/${PROJECT_NAME}/maze_drive.cpp
+#   src/${PROJECT_NAME}/MazeDrive.cpp
 #   src/${PROJECT_NAME}/lidar_process.cpp
 )
 
