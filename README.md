@@ -1,9 +1,9 @@
 # Practice_Programmers
 
-## [week4] Control
+## [week4] 고전제어 (Control)
 
-## [week5] Vehicle Dynamics
+## [week5] 차량동역학 (Vehicle Dynamics)
 
-## [week8] Vehicle Simulator
+## [week8] 장애물회피 (Obstacle Avoidance with Sensors)
 
-## [week8] Obstacle Avoidance
+## [week11] 시뮬레이션 기초 (Simulation Basic)
