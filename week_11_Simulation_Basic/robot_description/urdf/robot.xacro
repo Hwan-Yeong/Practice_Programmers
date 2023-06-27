@@ -243,47 +243,4 @@
             </geometry>
         </collision>
     </link>
-
-    <!-- Robot tail -->
-    <joint name="joint_tail" type="continuous">
-        <origin rpy="0 0 0" xyz="-1 0 0" />
-        <child link="link_tail" />
-        <axis rpy="0 0 0" xyz="0 1 0" />
-        <parent link="link_chassis" />
-        <joint_properties damping="1.0" friction="1.0" />
-    </joint>
-    <link name="link_tail">
-        <inertial>
-            <origin xyz="0 0 0" rpy="0 0 0" />
-            <mass value="0.5" />
-            <inertia ixx="0.000252666666667" ixy="0" ixz="0" iyy="0.000252666666667" iyz="0" izz="0.0005"/>
-        </inertial>
-        <visual>
-            <origin xyz="-0.2 0 0" rpy="0 ${pi/2} 0" />
-            <geometry>
-                <cylinder radius="0.05" length="0.40"/>
-            </geometry>
-            <material name="Red">
-                <color rgba="0.7 0.1 0.1 1" />
-            </material>
-        </visual>
-        <collision>
-            <origin xyz="-0.2 0 0" rpy="0 ${pi/2} 0"/>
-            <geometry>
-                <cylinder radius="0.05" length="0.40"/>
-            </geometry>
-        </collision>
-    </link>
-
-    <!-- Transmission -->
-    <transmission name="tran_tail">
-        <type>transmission_interface/SimpleTransmission</type>
-        <joint name="joint_tail">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-        </joint>
-        <actuator name="motor_joint_tail">
-            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-            <mechanicalReduction>1</mechanicalReduction>
-        </actuator>
-    </transmission>
 </robot>
