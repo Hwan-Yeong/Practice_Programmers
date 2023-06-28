@@ -7,3 +7,6 @@
 ## [week8] 장애물회피 (Obstacle Avoidance with Sensors)
 
 ## [week11] 시뮬레이션 기초 (Simulation Basic)
+
+## [week12] 시뮬레이션 심화 (Simulation Advanced)
+
