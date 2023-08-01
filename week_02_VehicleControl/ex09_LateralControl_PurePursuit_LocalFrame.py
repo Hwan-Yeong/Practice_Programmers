@@ -10,11 +10,11 @@ from ex06_GlobalFrame2LocalFrame import PolynomialValue
 # 로컬 origin 기준으로 속도에 비례한 x값을 Xp=k*Vx 라 두고, ld를 상수로 둬서 waypoint의 좌표를 (Xp, Yp)로 설정했다.
 # 근데 뭐가 이상하다...
 class PurePursuit(object):
-    def __init__(self, Vx, L, K=1.1, ld = 5):
+    def __init__(self, Vx, L, K=1.0):
         self.Vx = Vx
         self.L = L
         self.K = K # (K > 1)
-        self.ld = ld
+        self.ld = K*Vx
 
     def ControllerInput(self, X, Y):
         self.X = X
